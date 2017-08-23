@@ -19,14 +19,24 @@ public class SincronizandoHilos {
         HilosVarios hilo2 = new HilosVarios();
         HilosVarios hilo3 = new HilosVarios();
         hilo1.start();
-        hilo2.start ();
+        try {
+            hilo1.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(SincronizandoHilos.class.getName()).log(Level.SEVERE, null, ex);
+        }
+         hilo2.start();
+        try {
+            hilo2.join();
+        } catch (InterruptedException ex) {
+            Logger.getLogger(SincronizandoHilos.class.getName()).log(Level.SEVERE, null, ex);
+        }
         hilo3.start();
     }  
 }
 
 class HilosVarios extends Thread {
     public void run() {
-        for (int i = 0; i < 15; i++) {
+        for (int i = 0; i < 5; i++) {
             System.out.println("Ejecutando hilo " +getName());
             try {
                 Thread.sleep(400);

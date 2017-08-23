@@ -22,192 +22,254 @@ public class UsoThreads {
 
     public static void main(String[] args) {
 
-        JFrame marco=new MarcoRebote();
+        MarcoRebotes marco = new MarcoRebotes();
         marco.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        marco.setVisible(true);
     }
 }
 
-//Movimiento de la pelota-----------------------------------------------------------------------------------------
-class Pelota{
-    //coordenadas donde aparece la bola.
-    private double x=0;
-    private double y=0;
-    private double dx=1;
-    private double dy=1;
+class Pelota {//***********************************************************************************************CLASE Pelota
 
-    private static final int TAMX=15;
-    private static final int TAMY=15;
+    //tamano de la pelota
+
+    private static final int TAMX = 15;
+    private static final int TAMY = 15;
+    //coordenadas de la pelota.
+    private double x = 0;
+    private double y = 0;
+    private double dx = 1;//para aumentar las coordenadas.
+    private double dy = 1;
+
     /**
      * @param limites será la lámina donde aparecca la pelota, al ser de tipo
      * Rectangle podemos obtener las dimensiones
      */
-    public void mueve_pelota(Rectangle2D limites){
+    public void mueve_pelota(Rectangle2D limites) {
         //incrementa las coordenadas 'x e y' para que la pelota se valla moviendo.
-        x+=dx;
-        y+=dy;
+        x += dx;
+        y += dy;
         // serie de mt de la cl Rectangle2D para detectar los límites de la lámina y invertir las coordenadas.
-        if(x<limites.getMinX()){
-            x=limites.getMinX();
-            dx=-dx;
+        if (x < limites.getMinX()) {
+            x = limites.getMinX();
+            dx = -dx;
         }
 
-        if(x + TAMX>=limites.getMaxX()){
-            x=limites.getMaxX() - TAMX;
-            dx=-dx;
+        if (x + TAMX >= limites.getMaxX()) {
+            x = limites.getMaxX() - TAMX;
+            dx = -dx;
         }
 
-        if(y<limites.getMinY()){
-            y=limites.getMinY();
-            dy=-dy;
+        if (y < limites.getMinY()) {
+            y = limites.getMinY();
+            dy = -dy;
         }
 
-        if(y + TAMY>=limites.getMaxY()){
-            y=limites.getMaxY()-TAMY;
-            dy=-dy;
+        if (y + TAMY >= limites.getMaxY()) {
+            y = limites.getMaxY() - TAMY;
+            dy = -dy;
         }
     }
 
-    //Forma de la pelota en su posición inicial
-    public Ellipse2D getShape(){
-
-        return new Ellipse2D.Double(x,y,TAMX,TAMY);
-
-    }   
+    public Ellipse2D getShape() {
+        return new Ellipse2D.Double(x, y, TAMX, TAMY);
+    }
 }
 
-// Lámina que dibuja las pelotas----------------------------------------------------------------------
-class LaminaPelota extends JPanel{
 
-    private ArrayList<Pelota> pelotas=new ArrayList<Pelota>();
-    //Añadimos pelota a la lámina
-    public void add(Pelota b){
+class LaminaPelota extends JPanel {///*****************************************************CLASE LaminaPelota extends JPanel
+
+    private ArrayList<Pelota> pelotas = new ArrayList<>();
+
+    //pone un borde a la lamina.
+    public LaminaPelota() {
+        
+        setBorder(BorderFactory.createTitledBorder(BorderFactory.createLineBorder(Color.BLUE)));
+    }
+
+    //anade una pelota al ArrayList
+
+    public void add(Pelota b) {
         pelotas.add(b);
     }
 
-    public void paintComponent(Graphics g){
-
+    //pinta la pelota en la lamina.
+    public void paintComponent(Graphics g) {
+        
         super.paintComponent(g);
-        Graphics2D g2=(Graphics2D)g;
-        for(Pelota b: pelotas){
-            g2.fill(b.getShape());
+        Graphics2D g2 = (Graphics2D) g;
+
+        for (Pelota pelota : pelotas) {
+            g2.setPaint(Color.RED);
+            g2.fill(pelota.getShape());
         }
     }
 }
 
-//Marco con lámina y botones------------------------------------------------------------------------------
-class MarcoRebote extends JFrame{
+
+class MarcoRebotes extends JFrame {//************************************************************CLASE MarcoRebotes extends JFrame 
 
     private LaminaPelota lamina;
-    private Thread t;
+    private JPanel laminaBotones;
 
-    public MarcoRebote(){
-        setBounds(600,300,400,350);
-        setTitle ("Rebotes");
+    //creamos hilos y botones para ejecutarles independientemente.
+    private Thread t1, t2, t3;
+    private JButton arranca1, arranca2, arranca3, deten1, deten2, deten3;
 
-        lamina=new LaminaPelota();
+    public MarcoRebotes() {
+
+        laminaBotones = new JPanel();
+        lamina = new LaminaPelota();
+
         add(lamina, BorderLayout.CENTER);
-
-        JPanel laminaBotones=new JPanel();
         add(laminaBotones, BorderLayout.SOUTH);
 
-        ponerBoton(laminaBotones, "Dale!", new ActionListener(){
-                public void actionPerformed(ActionEvent evento){
-                    comienza_el_juego();
-                }
-            });
+        arranca1 = new JButton("Arranca1");
+        arranca2 = new JButton("Arranca2");
+        arranca3 = new JButton("Arranca3");
+        deten1 = new JButton("Deten1");
+        deten2 = new JButton("Deten2");
+        deten3 = new JButton("Deten3");
+        laminaBotones.add(arranca1);
+        laminaBotones.add(arranca2);
+        laminaBotones.add(arranca3);
+        laminaBotones.add(deten1);
+        laminaBotones.add(deten2);
+        laminaBotones.add(deten3);
 
-        ponerBoton(laminaBotones, "Salir", new ActionListener(){
-                public void actionPerformed(ActionEvent evento){
-                    System.exit(0);
-                }
-            });
+        //---------------------------------------------- SERIE DE BOTONES PARA MOSTRAR UNA PELOTA.
+        arranca1.addActionListener(new ActionListener() {
 
-        //NUEBO BOTON PARA PARAR LA EJECUCIÓN DE UN HILO.
-        ponerBoton(laminaBotones, "Detener", new ActionListener() {
-                public void actionPerformed(ActionEvent evento) {
-                    detener();
-                }
-            });
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                comienza_el_juego(e);
+            }
+        });
+        arranca2.addActionListener(new ActionListener() {
 
-    }
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                comienza_el_juego(e);
+            }
+        });
+        arranca3.addActionListener(new ActionListener() {
 
-    //Ponemos botones
-    public void ponerBoton(Container c, String titulo, ActionListener oyente){
-        JButton boton=new JButton(titulo);
-        c.add(boton);
-        boton.addActionListener(oyente);
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                comienza_el_juego(e);
+            }
+        });
+
+        //---------------------------------------------- SERIE DE BOTONES PARA DETENER UNA PELOTA.
+        deten1.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                detener(e);
+            }
+        });
+        deten2.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                detener(e);
+            }
+        });
+        deten3.addActionListener(new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                detener(e);
+            }
+        });
+        //coordenadas y tamano del marco.
+        setBounds(450, 150, 600, 400);
+        setTitle("Para therad");
+        setVisible(true);
+        //para mostrar miIcono personal.
+        Toolkit icono = Toolkit.getDefaultToolkit();
+        Image imagen = icono.getImage("../iconos/a.gif");
+        setIconImage(imagen);
     }
 
     /**
-     * 1º instancia la cl Pelota y crea una pelota.
-     * 2º agrega a la lamina la pelota.
-     * 3º pasa la cl 'Hilo' que implementa la interface Runnable la pelota y la lamina y almacena todo esto en una VL de tipo Runnable.
-     * 4º crea un tarea con ese Runnable
-     * 5º le dice que comience la tarea
-     * LA VENTAJA DE ESTO ES QUE CADA VEZ QUE INVOQUEMOS ESTE MT DESDE EL BOTÓN VA A CREAR UNA PELOTA EN LA LAMINA.
+     * 1º instancia la cl Pelota y crea una pelota. 2º agrega a la lamina la
+     * pelota. 3º pasa la cl que implementa la interface Runnable la pelota y la
+     * lamina y almacena todo esto en una VL de tipo Runnable. 4º crea un tarea
+     * con ese Runnable. 5º le dice que comience la tarea LA VENTAJA DE ESTO ES
+     * QUE CADA VEZ QUE INVOQUEMOS ESTE MT DESDE EL BOTÓN VA A CREAR UNA PELOTA
+     * EN LA LAMINA.
      */
-    public void comienza_el_juego (){
-        Pelota pelota=new Pelota();
-        lamina.add(pelota);
+    public void comienza_el_juego(ActionEvent e) {
+        Pelota pelota = new Pelota();// 1º instancia la cl Pelota y crea una pelota. 
+        lamina.add(pelota);// 2º agrega a la lamina la pelota.
+        Runnable r = new Hilo(pelota, lamina);// 3º pasa la cl que implementa la interface Runnable la pelota y lalamina y almacena todo esto en una VL de tipo Runnable.
 
-        /* *  *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
-
-         * 3º Instanciar la cl creada y almacenar la instancia en variable de tipo Runnable.
-         * 4º Crear instancia de la cl Thread pasando como parametro al constructor de Thread el objeto Runnable anterior.
-         * 5º Poner en marcha el hilo de ejecución con el mt start() de la cl Thread.*/
-
-        Runnable r = new Hilo(pelota, lamina);
-        t = new Thread(r);
-        t.start();
+        if (e.getSource().equals(arranca1)) {
+            t1 = new Thread(r);// 4º crea un tarea con ese Runnable.
+            t1.start();// 5º le dice que comience la tarea LA VENTAJA DE ESTO ES QUE CADA VEZ QUE INVOQUEMOS ESTE MT DESDE EL BOTÓN VA A CREAR UNA PELOTA EN LA LAMINA.
+        } else if (e.getSource().equals(arranca2)) {
+            t2 = new Thread(r);
+            t2.start();
+        } else if (e.getSource().equals(arranca3)) {
+            t3 = new Thread(r);
+            t3.start();
+        }
     }
 
     /**
-     * mt invocado desde el botón 'Detener' para ******* detener la ejecución de un hilo.*********
-     * 1º detenemos el hilo con el mt, 'stop()' aplicado al mismo objeto al que aplicamos el mt start().  
-     * 2º  solicitamos una interrupción con el mt, interrupt(), pero en ese instante en el que se produce una Excepcion, y no se 
-     *     para la ejecución del hilo, debido al 'try catch', en el que se produce una Excepcion, 
-     *     //PODEMOS SOLUCIONARLO PONIENDO System.exit(0) en la Excepcion.
-     *     
-     * 3º Hacer iterar un while mientras el mt interrupted(), sea true ------  while(!Thread.interrupted()).
+     * mt invocado desde los botónes 'Detener1, 2 y 3' para detener la ejecución
+     * de un hilo. 1º
      */
-    public void detener(){
+    public void detener(ActionEvent e) {
         //t.stop();// ----este mt, está en desuso, no es recomendable su utilización.
-        t.interrupt();
+        if (e.getSource().equals(deten1)) {
+            t1.interrupt();
+        } else if (e.getSource().equals(deten2)) {
+            t2.interrupt();
+        } else if (e.getSource().equals(deten3)) {
+            t3.interrupt();
+        }
     }
 
-    /**
-     * *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
-     * 1º Crear cl que implemente interface Runnable. 
-     */
-    private class Hilo implements Runnable {
+    private class Hilo implements Runnable {//-------------------------------------------------------CLASE Hilo implements Runnable
+
         private Pelota pelota;
         private Component componente;
+
         public Hilo(Pelota pelota, Component componente) {
             this.pelota = pelota;
             this.componente = componente;
         }
 
-        /**
-         *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
-         * 2º Escribir el codigo de la tarea dentro del mt run():
-         */
         @Override
         public void run() {
-            //bucle que llama 3000 veces al mt, mueve_pelota, el cual mueve la pelota una posición cada vez.
-            // for (int i = 1; i <= 30000; i++) {
-            while(!Thread.interrupted()){
+            //bucle que se ejecuta infinitamente hasta que no se cumpla la condición.
+            System.out.println("Esta interrumpido el hilo? " + Thread.currentThread().isInterrupted());
+
+            //while (!Thread.interrupted()) {
+            while (!Thread.currentThread().isInterrupted()) {
                 pelota.mueve_pelota(componente.getBounds());
                 componente.paint(componente.getGraphics());
-                //para hacer una pausa en la ejecucion de un hilo. Todos los programas que hemos hecho hasta ahora
-                // solo tienen un hilo. este tendrá varios hilos
-                /*try {
-                Thread.sleep(0, 4);
+
+                //para hacer una pausa en la ejecucion de un hilo.
+                try {
+                    Thread.sleep(0, 4);
                 } catch (InterruptedException e) {
-                //   System.out.println("Herrorrrrr. ¡¡¡¡");
-                //System.exit(0);
-                }*/
+                    //System.out.println("Herror. ¡¡¡¡");
+                    //---------------------TRUCO PARA DETENER EL HILO CUANDO LANZA LA EXCEPCION PRODUCIDA POR EL MT, sleep()
+                    Thread.currentThread().interrupt();
+                }
             }
+            System.out.println("Esta interrumpido el hilo? " + Thread.currentThread().isInterrupted());
         }
     }
 }
+/////////////////////////////////////////******************************************************************************************************
+
+
+
+
+
+
+
+
+

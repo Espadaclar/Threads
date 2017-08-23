@@ -36,7 +36,6 @@ class Pelota{
     private double dx=1;
     private double dy=1;
 
-    
     private static final int TAMX=15;
     private static final int TAMY=15;
     /**
@@ -52,7 +51,7 @@ class Pelota{
             x=limites.getMinX();
             dx=-dx;
         }
-        
+
         if(x + TAMX>=limites.getMaxX()){
             x=limites.getMaxX() - TAMX;
             dx=-dx;
@@ -100,6 +99,7 @@ class LaminaPelota extends JPanel{
 class MarcoRebote extends JFrame{
 
     private LaminaPelota lamina;
+    private Thread t;
 
     public MarcoRebote(){
         setBounds(600,300,400,350);
@@ -123,6 +123,13 @@ class MarcoRebote extends JFrame{
                 }
             });
 
+        //NUEBO BOTON PARA PARAR LA EJECUCIÓN DE UN HILO.
+        ponerBoton(laminaBotones, "Detener", new ActionListener() {
+                public void actionPerformed(ActionEvent evento) {
+                    detener();
+                }
+            });
+
     }
 
     //Ponemos botones
@@ -131,7 +138,7 @@ class MarcoRebote extends JFrame{
         c.add(boton);
         boton.addActionListener(oyente);
     }
-    
+
     /**
      * 1º instancia la cl Pelota y crea una pelota.
      * 2º agrega a la lamina la pelota.
@@ -143,39 +150,39 @@ class MarcoRebote extends JFrame{
     public void comienza_el_juego (){
         Pelota pelota=new Pelota();
         lamina.add(pelota);
-        
-        // ------ PARA EJECUTAT VARIOS THEADS PASAMOS ESTE CÓDIGO A LA CL, CON LA INTERFARCE
-        /* for (int i=1; i<=3000; i++){
-            pelota.mueve_pelota(lamina.getBounds());
-            lamina.paint(lamina.getGraphics());
-            //para hacer una pausa en la ejecucion de un hilo. Todos los programas que hemos hecho hasta ahora
-                // solo tienen un hilo
-            try{
-                Thread.sleep(4);
-            }catch(InterruptedException e){
-            }
-        }*/
-        
-       /* *  *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
- 
-        * 3º Instanciar la cl creada y almacenar la instancia en variable de tipo Runnable.
-        * 4º Crear instancia de la cl Thread pasando como parametro al constructor de Thread el objeto Runnable anterior.
-        * 5º Poner en marcha el hilo de ejecución con el mt start() de la cl Thread.*/
+
+        /* *  *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
+
+         * 3º Instanciar la cl creada y almacenar la instancia en variable de tipo Runnable.
+         * 4º Crear instancia de la cl Thread pasando como parametro al constructor de Thread el objeto Runnable anterior.
+         * 5º Poner en marcha el hilo de ejecución con el mt start() de la cl Thread.*/
 
         Runnable r = new Hilo(pelota, lamina);
-        Thread t = new Thread(r);
+        t = new Thread(r);
         t.start();
     }
-    
+
+    /**
+     * mt invocado desde el botón 'Detener' para ******* detener la ejecución de un hilo.*********
+     * 1º detenemos el hilo con el mt, 'stop()' aplicado al mismo objeto al que aplicamos el mt start().  
+     * 2º  solicitamos una interrupción con el mt, interrupt(), pero en ese instante en el que se produce una Excepcion, y no se 
+     *     para la ejecución del hilo, debido al 'try catch', en el que se produce una Excepcion, 
+     *     //PODEMOS SOLUCIONARLO PONIENDO System.exit(0) en la Excepcion.
+     *     
+     * 3º Hacer iterar un while mientras el mt interrupted(), sea true ------  while(!Thread.interrupted()).
+     */
+    public void detener(){
+        //t.stop();// ----este mt, está en desuso, no es recomendable su utilización.
+        t.interrupt();
+    }
+
     /**
      * *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
      * 1º Crear cl que implemente interface Runnable. 
      */
     private class Hilo implements Runnable {
-
         private Pelota pelota;
         private Component componente;
-
         public Hilo(Pelota pelota, Component componente) {
             this.pelota = pelota;
             this.componente = componente;
@@ -183,24 +190,23 @@ class MarcoRebote extends JFrame{
 
         /**
          *  ======================================== PASOS PARA PODER EJECUTAR VARIOS HILOS =====================
-        * 2º Escribir el codigo de la tarea dentro del mt run():
+         * 2º Escribir el codigo de la tarea dentro del mt run():
          */
         @Override
         public void run() {
             //bucle que llama 3000 veces al mt, mueve_pelota, el cual mueve la pelota una posición cada vez.
-            for (int i = 1; i <= 3000; i++) {
+            // for (int i = 1; i <= 30000; i++) {
+            while(!Thread.interrupted()){
                 pelota.mueve_pelota(componente.getBounds());
                 componente.paint(componente.getGraphics());
-                if (i == 3000) {
-
-                }
                 //para hacer una pausa en la ejecucion de un hilo. Todos los programas que hemos hecho hasta ahora
                 // solo tienen un hilo. este tendrá varios hilos
-                try {
-                    Thread.sleep(0, 4);
+                /*try {
+                Thread.sleep(0, 4);
                 } catch (InterruptedException e) {
-                    System.out.println("Herro. ¡¡¡¡");
-                }
+                //   System.out.println("Herrorrrrr. ¡¡¡¡");
+                //System.exit(0);
+                }*/
             }
         }
     }

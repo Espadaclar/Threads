@@ -23,7 +23,23 @@ Esta operarción la realizará otro Thread.
  * 3º ejecutamos el mt main. a) instanciar la cl que implementa la interface Runnable.
  *                           b) instanciar un objeto Thread pasandole un objeto que implenta la interface Runnable.
  *                           c) invocar el mt start() sobre el objeto Thread.
+ *
+ * 4º Al ser programación concurrente ocurre que se están ejecutando varios
+ * Threads a la vez, con lo que uno de ellos puede estar sacando dinero de una
+ * cuenta y antes de haberlo ingresado en otra cuenta, otro de los hilos haya
+ * imprimido el saldo total de todas las cuenta, con lo que ocurrirá que falte
+ * dinero.
+ *
+ * Para solucionar este problema, utilizamos la cl, 'ReentrantLock' la cual
+ * implementa dos interfaces, --la interface 'Lock' implementa varios mt, el mt
+ * ‘lock()’  el cual se encarga de bloquear un trozo de código hasta que el
+ * hilo que lo esté ejecutando termine de recorrer ese código. El mt ‘unLock()’
+ *  que desbloquea el código antes bloqueado.
+ *
  */
+import java.util.concurrent.locks.Lock;
+import java.util.concurrent.locks.ReentrantLock;
+
 public class BancoSinSincronizar {
 
     /**
@@ -32,12 +48,12 @@ public class BancoSinSincronizar {
     public static void main(String[] args) {
         Banco banco = new Banco();
         banco.muestraDatos();
-      /*  for(int i = 0; i < 100; i ++){
+        for(int i = 0; i < 100; i ++){
             EjecucionTransferencias r = new EjecucionTransferencias(banco, i, 2000);
             Thread t = new Thread(r);
             t.start();
 
-        }*/
+        }
     }
 
 }
@@ -51,6 +67,8 @@ public class BancoSinSincronizar {
 class Banco {
 
     private final double[] cuentas;
+    //para facilitar el que se ejecute un solo Thread cada vez en un trozo de código.
+    private Lock cierreBanco = new ReentrantLock();
 
     public Banco() {
         cuentas = new double[100];
@@ -62,22 +80,32 @@ class Banco {
 
     // REALIZA TRANSFERENCIAS ENTRE DOS CUENTAS.
     public void transferencia(int cuentaOrigen, int cuentaDestino, double cantidad) {
-        //1º comprobamos si la cuentaOrigen tien saldo suficiente.
-        if (cuentas[cuentaOrigen] < cantidad) {
-            System.out.println("Herror, saldo insuficiente en la cuena nº. " + cuentaOrigen);
-        } else {
-            //2º muestra en pantalla el Thread que va ha hacer la transferencia.
-            System.out.println("Hilo.- " + Thread.currentThread());
-            //3º comprueba si los nº de cuenta existen y hace la transferencia.
-            if (cuentaOrigen >= 0 && cuentaOrigen < 100 && cuentaDestino >= 0 && cuentaDestino < 100) {
-                System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
-                cuentas[cuentaOrigen] = cuentas[cuentaOrigen] - cantidad;
-                cuentas[cuentaDestino] = cuentas[cuentaDestino] + cantidad;
+
+        try {
+
+            cierreBanco.lock();// lock()--> solo permite la ejecución de un Thread cada vez.
+
+            //1º comprobamos si la cuentaOrigen tien saldo suficiente.
+            if (cuentas[cuentaOrigen] < cantidad) {
+                System.out.println("Herror, saldo insuficiente en la cuena nº. " + cuentaOrigen);
             } else {
-                System.out.println("Herror, nº de cuenta inexistente.");
-            }
-            //DEVUEVE EL SALDO TOTAS DE TODAS LAS CUENTAS, DESPUES DE CADA TRANSFERENCIA.
-            System.out.printf("\n\nSaldo total en el banco: %10.2f\n", getSaldoTotal());
+                //2º muestra en pantalla el Thread que va ha hacer la transferencia.
+                System.out.println("Hilo.- " + Thread.currentThread());
+                //3º comprueba si los nº de cuenta existen y hace la transferencia.
+                if (cuentaOrigen >= 0 && cuentaOrigen < 100 && cuentaDestino >= 0 && cuentaDestino < 100) {
+                    //System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
+                    cuentas[cuentaOrigen] = cuentas[cuentaOrigen] - cantidad;
+                    System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
+                    cuentas[cuentaDestino] = cuentas[cuentaDestino] + cantidad;
+                } else {
+                    System.out.println("Herror, nº de cuenta inexistente.");
+                }
+                //DEVUELVE EL SALDO TOTAS DE TODAS LAS CUENTAS, DESPUES DE CADA TRANSFERENCIA.
+                System.out.printf("\n\nSaldo total en el banco: %10.2f\n", getSaldoTotal());
+            }           
+        } 
+        finally {// finally --> que tanto si se produce una Excepción como si no, al final del código libera la Excepcion.
+            cierreBanco.unlock();
         }
     }
 
@@ -93,6 +121,7 @@ class Banco {
     public void muestraDatos() {
         for (int i = 0; i < cuentas.length; i++) {
             System.out.println("Cuenta nº " + i + " --> " + cuentas[i] + " €.");
+
         }
     }
 
@@ -112,9 +141,9 @@ class EjecucionTransferencias implements Runnable {
 
     @Override
     public void run() {
-        try {
-            while (true) {
 
+        while (true) {
+            try {
                 // la transferencia se realiza a un nº de cuenta aleatorio.
                 // -- DATO: Math.random() devuelve un double entre 0 y 1. para pasar a entero hacemos casting.
                 int paraLaCuenta = (int) (100 * Math.random());
@@ -124,11 +153,12 @@ class EjecucionTransferencias implements Runnable {
                 banco.transferencia(cuentaOrigen, paraLaCuenta, cantidad);
 
                 //para que lo muestre en pantalla de forma lenta, dormimos el hilo.
-                Thread.sleep((int) (Math.random()*10));
+                Thread.sleep((int) (Math.random() * 10));
 
+            } catch (InterruptedException ex) {
+                System.out.println("Error .....");
             }
-        } catch (InterruptedException ex) {
-            System.out.println("Error .....");
+
         }
 
     }

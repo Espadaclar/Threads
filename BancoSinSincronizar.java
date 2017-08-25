@@ -84,27 +84,32 @@ class Banco {
         try {
 
             cierreBanco.lock();// lock()--> solo permite la ejecución de un Thread cada vez.
-
             //1º comprobamos si la cuentaOrigen tien saldo suficiente.
+            //   SI NO LO TIENE LANZA UN ERROR EN PANTALLA Y EL  -----RETURN --> HACE REGRESAR EL CÓDIGO A LA CABECERA DEL MT.
             if (cuentas[cuentaOrigen] < cantidad) {
-                System.out.println("Herror, saldo insuficiente en la cuena nº. " + cuentaOrigen);
+                System.out.println("\n ------ SALDO INSUFICIENTE EN LA CUENTA Nº. " + cuentaOrigen + " SU SALDO ES DE " + cuentas[cuentaOrigen]
+                        + " €. PARA UNA TRANSFERENCIA DE " + cantidad + " €. -------\n");
+                        
+                return;  // return -->HACE REGRESAR EL CÓDIGO A LA CABECERA DEL MT.
+                
             } else {
-                //2º muestra en pantalla el Thread que va ha hacer la transferencia.
-                System.out.println("Hilo.- " + Thread.currentThread());
-                //3º comprueba si los nº de cuenta existen y hace la transferencia.
-                if (cuentaOrigen >= 0 && cuentaOrigen < 100 && cuentaDestino >= 0 && cuentaDestino < 100) {
-                    //System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
-                    cuentas[cuentaOrigen] = cuentas[cuentaOrigen] - cantidad;
-                    System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
-                    cuentas[cuentaDestino] = cuentas[cuentaDestino] + cantidad;
-                } else {
-                    System.out.println("Herror, nº de cuenta inexistente.");
-                }
-                //DEVUELVE EL SALDO TOTAS DE TODAS LAS CUENTAS, DESPUES DE CADA TRANSFERENCIA.
-                System.out.printf("\n\nSaldo total en el banco: %10.2f\n", getSaldoTotal());
-            }           
-        } 
-        finally {// finally --> que tanto si se produce una Excepción como si no, al final del código libera la Excepcion.
+                System.out.println(" ------ TRANSFERENCIA OK --------");
+            }
+            //2º muestra en pantalla el Thread que va ha hacer la transferencia.
+            System.out.println("Hilo.- " + Thread.currentThread());
+            //3º comprueba si los nº de cuenta existen y hace la transferencia.
+            if (cuentaOrigen >= 0 && cuentaOrigen < 100 && cuentaDestino >= 0 && cuentaDestino < 100) {
+                //System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
+                cuentas[cuentaOrigen] = cuentas[cuentaOrigen] - cantidad;
+                System.out.printf("%10.2f € de cuenta %d para cuenta %d", cantidad, cuentaOrigen, cuentaDestino);
+                cuentas[cuentaDestino] = cuentas[cuentaDestino] + cantidad;
+            } else {
+                System.out.println("Herror, nº de cuenta inexistente.");
+            }
+            //DEVUELVE EL SALDO TOTAS DE TODAS LAS CUENTAS, DESPUES DE CADA TRANSFERENCIA.
+            System.out.printf(" --------------- Saldo total en el banco: %10.2f\n", getSaldoTotal());
+
+        } finally {// finally --> que tanto si se produce una Excepción como si no, al final del código libera la Excepcion.
             cierreBanco.unlock();
         }
     }
